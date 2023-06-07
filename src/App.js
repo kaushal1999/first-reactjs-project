@@ -35,13 +35,15 @@ const PRODUCTS = [
   { category: "Electronics", price: "$199.99", stocked: true, name: "Nexus 7" },
 ];
 
-function SearchBar() {
+function SearchBar(props) {
   return (
     <form>
-      <input type="text" placeholder="Search..." />
+      <input type="text" placeholder="Search..." value={props.filterText} onChange={props.handleText}
+      />
       <label>
         {" "}
-        <input type="checkbox" /> Only show products in stock
+        <input type="checkbox" value={props.checked} onChange={props.handleBox} /> Only show products in
+        stock
       </label>
     </form>
   );
@@ -64,15 +66,21 @@ function ProductRow(props) {
   );
 }
 
-function ProductTable() {
+function ProductTable(props) {
+  let filterText = props.filterText;
+  let checked = props.checked;
   let rows = [];
   let lastCategory = null;
   PRODUCTS.forEach((element) => {
+    if (filterText!=="" &&  element.name.indexOf(filterText) === -1) return;
+    if (checked && !element.stocked) return;
+
     let cat = element.category;
-    if (cat != lastCategory) {
+    if (cat !== lastCategory) {
       lastCategory = cat;
       rows.push(<ProductCategoryRow category={cat}></ProductCategoryRow>);
-      rows.push(<ProductRow product={element}></ProductRow>)
+
+      rows.push(<ProductRow product={element}></ProductRow>);
     } else {
       rows.push(<ProductRow product={element}></ProductRow>);
     }
@@ -88,20 +96,42 @@ function ProductTable() {
   );
 }
 
-function FilterableProductTable(props) {
-  return (
-    <div>
-      <SearchBar></SearchBar>
-      <ProductTable product={props.product}></ProductTable>
-    </div>
-  );
+class FilterableProductTable extends React.Component {
+  constructor() {
+    super();
+    this.state = { filterText: "", checked: false };
+  }
+  handleText= (e)=> {
+    this.setState(
+      this.state = { filterText: e.target.value }
+    );
+  }
+  handleBox = (e)=>{
+      this.setState({checked:!this.state.checked})
+  }
+  render() {
+    return (
+      <div>
+        <SearchBar
+          filterText={this.state.filterText}
+          checked={this.state.checked}
+          handleBox={this.handleBox}
+          handleText={this.handleText}
+        ></SearchBar>
+        <ProductTable
+          filterText={this.state.filterText}
+          checked={this.state.checked}
+        ></ProductTable>
+      </div>
+    );
+  }
 }
 
 class App extends Component {
   render() {
     return (
       <div>
-        <FilterableProductTable product={PRODUCTS} />
+        <FilterableProductTable/>
       </div>
     );
   }
